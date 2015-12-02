@@ -13,59 +13,67 @@
 001300 01  YES            PIC X VALUE IS "Y".                                   
 001400 01  DONE           PIC X.                                                
 001500                                                                          
-001600 PROCEDURE DIVISION.                                                      
-001700                                                                          
-001800 PROGRAM-BEGIN.                                                           
-001900   DISPLAY "Welcome! Let's play a game.".                                 
-002000   PERFORM SELECT-NUMBER.                                                 
-002100   PERFORM MAIN-LOOP                                                      
-002200     UNTIL DONE = YES.                                                    
-002300                                                                          
-002400 PROGRAM-DONE.                                                            
-002500   STOP RUN.                                                              
-002600                                                                          
-002700 MAIN-LOOP.                                                               
-002800   PERFORM PROMPT-USER.                                                   
-002900   PERFORM CHECK-GUESS.                                                   
+001600 01  SEED-TIME.                                                           
+001700    05 SEED         PIC 9(4).                                             
+001800                                                                          
+001900 PROCEDURE DIVISION.                                                      
+002000                                                                          
+002100 PROGRAM-BEGIN.                                                           
+002200   DISPLAY "Welcome! Let's play a game.".                                 
+002300   PERFORM SEED-RANDOM.                                                   
+002400   PERFORM SELECT-NUMBER.                                                 
+002500   PERFORM MAIN-LOOP                                                      
+002600     UNTIL DONE = YES.                                                    
+002700                                                                          
+002800 PROGRAM-DONE.                                                            
+002900   STOP RUN.                                                              
 003000                                                                          
-003100 SELECT-NUMBER.                                                           
-003200   MOVE 0 TO TRIES.                                                       
-003300* TODO: This needs to pick a random number.                               
-003400   MOVE 50 TO ANSWER.                                                     
-003500                                                                          
-003600 PROMPT-USER.                                                             
-003700   DISPLAY "Guess what number I'm thinking of between 1 and 100."         
-003800-    " (Enter -1 to give up.)".                                           
-003900   ACCEPT GUESS.                                                          
-004000                                                                          
-004100 CHECK-GUESS.                                                             
-004200   IF GUESS = -1                                                          
-004300     PERFORM GIVE-UP                                                      
-004400   ELSE                                                                   
-004500     PERFORM SHOW-HINT.                                                   
-004600                                                                          
-004700 GIVE-UP.                                                                 
-004800     DISPLAY "It was " ANSWER "!"                                         
-004900     MOVE YES TO DONE.                                                    
-005000                                                                          
-005100 SHOW-HINT.                                                               
-005200   ADD 1 TO TRIES.                                                        
-005300   COMPUTE DELTA = GUESS - ANSWER.                                        
+003100 MAIN-LOOP.                                                               
+003200   PERFORM PROMPT-USER.                                                   
+003300   PERFORM CHECK-GUESS.                                                   
+003400                                                                          
+003500 SEED-RANDOM.                                                             
+003600   MOVE FUNCTION CURRENT-DATE(12:16) TO SEED-TIME.                        
+003700   DISPLAY SEED.                                                          
+003800   COMPUTE ANSWER = FUNCTION RANDOM(SEED).                                
+003900                                                                          
+004000 SELECT-NUMBER.                                                           
+004100   MOVE 0 TO TRIES.                                                       
+004200   COMPUTE ANSWER = (FUNCTION RANDOM() * 99) + 1.                         
+004300                                                                          
+004400 PROMPT-USER.                                                             
+004500   DISPLAY "Guess what number I'm thinking of between 1 and 99."          
+004600-    " (Enter -1 to give up.)".                                           
+004700   ACCEPT GUESS.                                                          
+004800                                                                          
+004900 CHECK-GUESS.                                                             
+005000   IF GUESS = -1                                                          
+005100     PERFORM GIVE-UP                                                      
+005200   ELSE                                                                   
+005300     PERFORM SHOW-HINT.                                                   
 005400                                                                          
-005500   IF DELTA = 0                                                           
-005600     DISPLAY "Correct! You guessed it in " TRIES " tries!"                
+005500 GIVE-UP.                                                                 
+005600     DISPLAY "It was " ANSWER "!"                                         
 005700     MOVE YES TO DONE.                                                    
 005800                                                                          
-005900   IF DELTA < 0                                                           
-006000     DISPLAY "Too low, guess again!".                                     
-006100                                                                          
-006200   IF DELTA > 0                                                           
-006300     DISPLAY "Too high, guess again!".                                    
-006400                                                                          
-006500   IF TRIES = 99                                                          
-006600     DISPLAY "You've guessed too many times!"                             
-006700     DISPLAY "The answer was " ANSWER "."                                 
-006800     MOVE YES TO DONE                                                     
-006900   ELSE                                                                   
-007000     DISPLAY "You've guessed " TRIES " times.".                           
-007100                                                                          
+005900 SHOW-HINT.                                                               
+006000   ADD 1 TO TRIES.                                                        
+006100   COMPUTE DELTA = GUESS - ANSWER.                                        
+006200                                                                          
+006300   IF DELTA = 0                                                           
+006400     DISPLAY "Correct! You guessed it in " TRIES " tries!"                
+006500     MOVE YES TO DONE.                                                    
+006600                                                                          
+006700   IF DELTA < 0                                                           
+006800     DISPLAY "Too low, guess again!".                                     
+006900                                                                          
+007000   IF DELTA > 0                                                           
+007100     DISPLAY "Too high, guess again!".                                    
+007200                                                                          
+007300   IF TRIES = 99                                                          
+007400     DISPLAY "You've guessed too many times!"                             
+007500     DISPLAY "The answer was " ANSWER "."                                 
+007600     MOVE YES TO DONE                                                     
+007700   ELSE                                                                   
+007800     DISPLAY "You've guessed " TRIES " times.".                           
+007900                                                                          
