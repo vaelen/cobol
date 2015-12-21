@@ -31,15 +31,15 @@
 003100                                                                          
 003200 WORKING-STORAGE SECTION.                                                 
 003300                                                                          
-003400 01  ANSWER         PIC  9(2).                                            
-003500 01  GUESS          PIC S9(2).                                            
-003600 01  DELTA          PIC S9(2).                                            
-003700 01  TRIES          PIC  9(2).                                            
+003400 01  ANSWER         PIC  9(2) VALUE IS ZEROES.                            
+003500 01  GUESS          PIC S9(2) VALUE IS ZEROES.                            
+003600 01  DELTA          PIC S9(2) VALUE IS ZEROES.                            
+003700 01  TRIES          PIC  9(2) VALUE IS ZEROES..                           
 003800 01  YES            PIC X VALUE IS "Y".                                   
-003900 01  DONE           PIC X.                                                
+003900 01  DONE           PIC X VALUE IS SPACES..                               
 004000                                                                          
 004100 01  SEED-TIME.                                                           
-004200    05 SEED         PIC 9(4).                                             
+004200    05 SEED         PIC 9(4) VALUE IS ZEROES..                            
 004300                                                                          
 004400 PROCEDURE DIVISION.                                                      
 004500                                                                          
