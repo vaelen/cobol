@@ -32,11 +32,14 @@
 003200 WORKING-STORAGE SECTION.                                                 
 003300                                                                          
 003400 01  ANSWER         PIC  9(2) VALUE IS ZEROES.                            
-003500 01  GUESS          PIC S9(2) VALUE IS ZEROES.                            
+003500 01  GUESS          PIC S9(2) VALUE IS -1.                                
+003510    88 VALID-GUESS            VALUE IS 0 THROUGH 99.                      
+003520    88 USER-GIVES-UP          VALUE IS 0.                                 
 003600 01  DELTA          PIC S9(2) VALUE IS ZEROES.                            
 003700 01  TRIES          PIC  9(2) VALUE IS ZEROES.                            
-003800 01  YES            PIC X VALUE IS "Y".                                   
-003900 01  DONE           PIC X VALUE IS SPACES.                                
+003900 01  DONE           PIC X     VALUE IS SPACES.                            
+003910    88 PROGRAM-FINISHED       VALUE IS "Y".                               
+003920 01  YES            PIC X     VALUE IS "Y".                               
 004000                                                                          
 004100 01  SEED-TIME.                                                           
 004200    05 SEED         PIC 9(4) VALUE IS ZEROES.                             
@@ -48,14 +51,16 @@
 004800   PERFORM SEED-RANDOM.                                                   
 004900   PERFORM SELECT-NUMBER.                                                 
 005000   PERFORM MAIN-LOOP                                                      
-005100     UNTIL DONE = YES.                                                    
+005100     UNTIL PROGRAM-FINISHED.                                              
 005200                                                                          
 005300 PROGRAM-DONE.                                                            
 005400   STOP RUN.                                                              
 005500                                                                          
 005600 MAIN-LOOP.                                                               
-005700   PERFORM PROMPT-USER.                                                   
+005700   PERFORM PROMPT-USER                                                    
+005710     UNTIL VALID-GUESS.                                                   
 005800   PERFORM CHECK-GUESS.                                                   
+005810   MOVE -1 TO GUESS.                                                      
 005900                                                                          
 006000 SEED-RANDOM.                                                             
 006100   MOVE FUNCTION CURRENT-DATE(12:16) TO SEED-TIME.                        
@@ -67,11 +72,11 @@
 006700                                                                          
 006800 PROMPT-USER.                                                             
 006900   DISPLAY "Guess what number I'm thinking of between 1 and 99."          
-007000-    " (Enter -1 to give up.)".                                           
+007000-    " (Enter 0 to give up.)".                                            
 007100   ACCEPT GUESS.                                                          
 007200                                                                          
 007300 CHECK-GUESS.                                                             
-007400   IF GUESS = -1                                                          
+007400   IF USER-GIVES-UP                                                       
 007500     PERFORM GIVE-UP                                                      
 007600   ELSE                                                                   
 007700     PERFORM SHOW-HINT.                                                   
