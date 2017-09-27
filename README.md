@@ -1,4 +1,5 @@
-# cobol
-![Why Not COBOL?](http://cdn.meme.am/instances2/500x/3115243.jpg)
+# COBOL Programs
+
+![Why Not COBOL?](/why-not-cobol.jpg?raw=true)
 
 The programs in this repo were written with [GnuCobol 2.0](http://open-cobol.sourceforge.net/).
