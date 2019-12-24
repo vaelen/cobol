@@ -1,4 +1,4 @@
-DIRS = guess phone
+DIRS = guess phone ledger
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
@@ -7,6 +7,7 @@ all: $(BUILDDIRS)
 
 guess: build-guess
 phone: build-phone
+ledger: build-ledger
 
 $(BUILDDIRS):
 	$(MAKE) -C $(@:build-%=%)
