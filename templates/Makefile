@@ -5,6 +5,7 @@
 
 # default options, note that -g will leave intermediate files
 COBCOPTS = -W -g -debug
+COBCOPTS = -g -debug
 
 # filenames to cleanup
 COBCCLEAN = $*.c $*.s $*.i $*.c.h $*.c.l* $*.so $*.html $*
