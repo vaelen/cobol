@@ -45,35 +45,44 @@
                RECORD KEY IS LEDGER-ID
                ALTERNATE RECORD KEY IS LEDGER-ACCOUNT-ID WITH DUPLICATES
                ACCESS MODE IS DYNAMIC.
+
+           SELECT OPTIONAL CONTROL-FILE
+               ASSIGN TO "control.dat"
+               ORGANIZATION IS SEQUENTIAL.
            
        DATA DIVISION.
        FILE SECTION.
        
        FD  ACCOUNT-FILE.
        01  ACCOUNT-RECORD.
-           05  ACCOUNT-ID                 PIC 9(10) VALUE ZEROS.
-           05  ACCOUNT-COMPANY-NAME       PIC X(10) VALUE SPACES.
-           05  ACCOUNT-NUMBER             PIC X(20) VALUE SPACES.
-           05  ACCOUNT-TYPE               PIC X(20) VALUE SPACES.
-           05  ACCOUNT-DESCRIPTION        PIC X(50) VALUE SPACES.
-           05  ACCOUNT-STATUS             PIC X(1) VALUE SPACE.
+           05  ACCOUNT-ID                 PIC 9(10)      VALUE ZEROS.
+           05  ACCOUNT-COMPANY-NAME       PIC X(10)      VALUE SPACES.
+           05  ACCOUNT-NUMBER             PIC X(20)      VALUE SPACES.
+           05  ACCOUNT-TYPE               PIC X(20)      VALUE SPACES.
+           05  ACCOUNT-DESCRIPTION        PIC X(50)      VALUE SPACES.
+           05  ACCOUNT-STATUS             PIC X(1)       VALUE SPACE.
 
        FD  LEDGER-FILE.
        01  LEDGER-RECORD.
-           05  LEDGER-ID                  PIC 9(10) VALUE ZEROS.
-           05  LEDGER-ACCOUNT-ID          PIC 9(10) VALUE ZEROS.
+           05  LEDGER-ID                  PIC 9(10)      VALUE ZEROS.
+           05  LEDGER-ACCOUNT-ID          PIC 9(10)      VALUE ZEROS.
            05  LEDGER-DATE.
-               10  LEDGER-DATE-YEAR       PIC 9(4) VALUE ZEROS.
-               10  LEDGER-DATE-MONTH      PIC 9(2) VALUE ZEROS.
-               10  LEDGER-DATE-DAY        PIC 9(2) VALUE ZEROS.
-           05  LEDGER-DESCRIPTION         PIC X(50) VALUE SPACES.
+               10  LEDGER-DATE-YEAR       PIC 9(4)       VALUE ZEROS.
+               10  LEDGER-DATE-MONTH      PIC 9(2)       VALUE ZEROS.
+               10  LEDGER-DATE-DAY        PIC 9(2)       VALUE ZEROS.
+           05  LEDGER-DESCRIPTION         PIC X(50)      VALUE SPACES.
            05  LEDGER-AMOUNT              PIC S9(9)V9(2) VALUE ZEROS.
-       
+
+       FD  CONTROL-FILE.
+       01  CONTROL-RECORD.
+           05  NEXT-ACCOUNT-ID            PIC 9(10)      VALUE ZEROS.
+           
        WORKING-STORAGE SECTION.
 
-       77  MENU-OPTION                    PIC 9(1) VALUE ZERO.
-       77  END-OF-FILE                    PIC X(1) VALUE SPACE.
-       77  NEXT-ACCOUNT-ID                PIC 9(10) VALUE ZEROS.
+       77  MENU-OPTION                    PIC 9(1)       VALUE ZERO.
+       77  END-OF-FILE                    PIC X(1)       VALUE SPACE.
+       77  CURRENT-LINE                   PIC 9(3)       VALUE ZEROS.
+       77  CONTINUE-KEY                   PIC X(1)       VALUE SPACE.
 
        SCREEN SECTION.
 
@@ -109,18 +118,54 @@
            05  LINE 4 COL 29 PIC X(1) USING ACCOUNT-STATUS.
            05  LINE 5 COL 1 VALUE "Description: ".
            05  LINE 5 COL 14 PIC X(50) USING ACCOUNT-DESCRIPTION.
-       
+
+       01  ADD-ACCOUNT-PROMPT.
+           05  LINE 7 COL 1 VALUE "Add Account? (Y/N)".
+           05  LINE 7 COL 20 PIC Z USING CONTINUE-KEY AUTO.
+           
+       01  LIST-ACCOUNT-SCREEN.
+           05  BLANK SCREEN.
+           05  LINE 1 COL 1  VALUE "ID".
+           05  LINE 1 COL 12 VALUE "Company".
+           05  LINE 1 COL 24 VALUE "Number".
+           05  LINE 1 COL 46 VALUE "Type".
+           05  LINE 1 COL 68 VALUE "S".
+           05  LINE 2 COL 1  VALUE "----------".
+           05  LINE 2 COL 12 VALUE "----------".
+           05  LINE 2 COL 24 VALUE "--------------------".
+           05  LINE 2 COL 46 VALUE "--------------------".
+           05  LINE 2 COL 68 VALUE "-".
+
+       01  ACCOUNT-LIST-ROW.
+           05  LINE CURRENT-LINE COL 1  PIC 9(10)
+                                        FROM ACCOUNT-ID.
+           05  LINE CURRENT-LINE COL 12 PIC X(10)
+                                        FROM ACCOUNT-COMPANY-NAME.
+           05  LINE CURRENT-LINE COL 24 PIC X(20)
+                                        FROM ACCOUNT-NUMBER.
+           05  LINE CURRENT-LINE COL 46 PIC X(20)
+                                        FROM ACCOUNT-TYPE.
+           05  LINE CURRENT-LINE COL 68 PIC X(1)
+                                        FROM ACCOUNT-STATUS.
+
+       01  CONTINUE-PROMPT.
+           05  LINE CURRENT-LINE COL 1
+                                 VALUE "PRESS ANY KEY TO CONTINUE.".
+           05  LINE CURRENT-LINE COL 28 PIC Z USING CONTINUE-KEY AUTO.
+           
        PROCEDURE DIVISION.
       
        PROGRAM-BEGIN.
+           PERFORM LOAD-CONTROL-FILE.
            OPEN I-O ACCOUNT-FILE.
            OPEN I-O LEDGER-FILE.
            PERFORM MAIN-PROCESS.
-           CLOSE LEDGER-FILE.
-           CLOSE ACCOUNT-FILE.
       
        PROGRAM-DONE.
-            STOP RUN.
+           CLOSE LEDGER-FILE.
+           CLOSE ACCOUNT-FILE.
+           PERFORM WRITE-CONTROL-FILE.
+           STOP RUN.
 
        MAIN-PROCESS.
            MOVE "N" TO END-OF-FILE.
@@ -136,6 +181,21 @@
            MOVE ZEROS TO LEDGER-RECORD.
            MOVE SPACES TO LEDGER-DESCRIPTION.
 
+       INIT-CONTROL-RECORD.
+           MOVE ZEROS TO NEXT-ACCOUNT-ID.
+           
+       LOAD-CONTROL-FILE.
+           PERFORM INIT-CONTROL-RECORD.
+           OPEN INPUT CONTROL-FILE.
+           READ CONTROL-FILE NEXT RECORD
+               AT END MOVE "Y" TO END-OF-FILE.
+           CLOSE CONTROL-FILE.
+
+       WRITE-CONTROL-FILE.
+           OPEN OUTPUT CONTROL-FILE.
+           WRITE CONTROL-RECORD.
+           CLOSE CONTROL-FILE.
+           
        MAIN-MENU.
            PERFORM MAIN-MENU-LOOP
                UNTIL MENU-OPTION IS EQUAL TO 9.
@@ -153,13 +213,15 @@
                PERFORM REPORT-MENU.
 
        LIST-ACCOUNTS.
-           DISPLAY "Accounts:".
+           DISPLAY LIST-ACCOUNT-SCREEN.
+           MOVE 3 TO CURRENT-LINE.
            MOVE "N" TO END-OF-FILE.
            PERFORM RESET-ACCOUNT-FILE-POSITION.
            IF END-OF-FILE IS NOT EQUAL TO "Y"
-               PERFORM READ-NEXT-ACCOUNT-RECORD
-               PERFORM DISPLAY-ACCOUNT-RECORD
+               PERFORM DISPLAY-NEXT-ACCOUNT-LIST-ROW
                    UNTIL END-OF-FILE IS EQUAL TO "Y"
+               DISPLAY CONTINUE-PROMPT
+               ACCEPT CONTINUE-PROMPT
            END-IF.
            DISPLAY " ".
 
@@ -167,20 +229,44 @@
            MOVE ZEROS TO ACCOUNT-ID.
            START ACCOUNT-FILE KEY IS GREATER THAN OR EQUAL TO ACCOUNT-ID
                INVALID KEY MOVE "Y" TO END-OF-FILE.
+
+       DISPLAY-NEXT-ACCOUNT-LIST-ROW.
+           PERFORM READ-NEXT-ACCOUNT-RECORD.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               IF CURRENT-LINE IS GREATER THAN 23
+                   DISPLAY CONTINUE-PROMPT
+                   ACCEPT CONTINUE-PROMPT
+                   DISPLAY LIST-ACCOUNT-SCREEN
+                   MOVE 3 TO CURRENT-LINE
+               END-IF
+               PERFORM DISPLAY-ACCOUNT-LIST-RECORD
+           END-IF.
            
        READ-NEXT-ACCOUNT-RECORD.
            READ ACCOUNT-FILE NEXT RECORD
                AT END MOVE "Y" TO END-OF-FILE.
            
-       DISPLAY-ACCOUNT-RECORD.
-           
+       DISPLAY-ACCOUNT-LIST-RECORD.
+           DISPLAY ACCOUNT-LIST-ROW.
+           ADD 1 TO CURRENT-LINE.
 
+       SHOW-ADD-ACCOUNT-PROMPT.        
+           DISPLAY ADD-ACCOUNT-PROMPT.
+           ACCEPT ADD-ACCOUNT-PROMPT.
+           
        ADD-ACCOUNTS.
            PERFORM INIT-ACCOUNT-RECORD.
            MOVE NEXT-ACCOUNT-ID TO ACCOUNT-ID.
            DISPLAY ADD-ACCOUNT-SCREEN.
            ACCEPT ADD-ACCOUNT-SCREEN.
-           ADD 1 TO NEXT-ACCOUNT-ID.
+           MOVE SPACES TO CONTINUE-KEY.
+           PERFORM SHOW-ADD-ACCOUNT-PROMPT
+               UNTIL CONTINUE-KEY EQUALS "Y" OR "y"
+               OR "N" OR "n".
+           IF CONTINUE-KEY EQUALS "Y" OR "y"
+               WRITE ACCOUNT-RECORD
+               ADD 1 TO NEXT-ACCOUNT-ID
+           END-IF.
 
        REMOVE-ACCOUNT.
                           
