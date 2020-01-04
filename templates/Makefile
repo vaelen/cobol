@@ -4,8 +4,8 @@
 #.RECIPEPREFIX = >
 
 # default options, note that -g will leave intermediate files
-COBCOPTS = -W -g -debug
-COBCOPTS = -g -debug
+# COBCOPTS = -W -g -debug
+COBCOPTS = -g -debug -std=cobol85
 
 # filenames to cleanup
 COBCCLEAN = $*.c $*.s $*.i $*.c.h $*.c.l* $*.so $*.html $*
