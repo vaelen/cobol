@@ -56,7 +56,7 @@
        
        FD  ACCOUNT-FILE.
        01  ACCOUNT-RECORD.
-           05  ACCOUNT-COMPANY            PIC X(5)       VALUE SPACES.
+           05  ACCOUNT-COMPANY            PIC X(8)       VALUE SPACES.
            05  ACCOUNT-NUMBER             PIC X(20)      VALUE SPACES.
            05  ACCOUNT-TYPE               PIC X(10)      VALUE SPACES.
            05  ACCOUNT-DESCRIPTION        PIC X(50)      VALUE SPACES.
@@ -159,52 +159,52 @@
        01  ADD-ACCOUNT-SCREEN.
            05  BLANK SCREEN.
            05  LINE 1  COLUMN 1  VALUE "Add Account:"
-           05  LINE 3  COLUMN 1  VALUE "ID: ".
-           05  LINE 3  COLUMN 5  PIC Z(7)9 FROM ACCOUNT-ID.
-           05  LINE 3  COLUMN 16 VALUE "Company: ".
-           05  LINE 3  COLUMN 26 PIC X(5) USING ACCOUNT-COMPANY.
-           05  LINE 3  COLUMN 32 VALUE "Number: ".
-           05  LINE 3  COLUMN 41 PIC X(20) USING ACCOUNT-NUMBER.
-           05  LINE 3  COLUMN 62 VALUE "Value: ".
-           05  LINE 3  COLUMN 70 PIC -$$$$$$$$$9.99 USING ACCOUNT-VALUE.
-           05  LINE 4  COLUMN 1  VALUE "Type: ".
-           05  LINE 4  COLUMN 7  PIC X(10) USING ACCOUNT-TYPE.
-           05  LINE 4  COLUMN 19 VALUE "Status: ".
-           05  LINE 4  COLUMN 28 PIC X(1) USING ACCOUNT-STATUS.
-           05  LINE 5  COLUMN 1  VALUE "Description: ".
-           05  LINE 5  COLUMN 14 PIC X(50) USING ACCOUNT-DESCRIPTION.
+           05  LINE 3  COLUMN 1  VALUE "         ID: ".
+           05  LINE 3  COLUMN 14  PIC Z(7)9 FROM ACCOUNT-ID.
+           05  LINE 4  COLUMN 1  VALUE "    Company: ".
+           05  LINE 4  COLUMN 14 PIC X(8) USING ACCOUNT-COMPANY.
+           05  LINE 5  COLUMN 1  VALUE "     Number: ".
+           05  LINE 5  COLUMN 14 PIC X(20) USING ACCOUNT-NUMBER.
+           05  LINE 6  COLUMN 1  VALUE "      Value: ".
+           05  LINE 6  COLUMN 14 PIC -$$$$$$$$$$.$$ USING ACCOUNT-VALUE.
+           05  LINE 7  COLUMN 1  VALUE "       Type: ".
+           05  LINE 7  COLUMN 14  PIC X(10) USING ACCOUNT-TYPE.
+           05  LINE 8  COLUMN 1  VALUE "     Status: ".
+           05  LINE 8  COLUMN 14 PIC X(1) USING ACCOUNT-STATUS.
+           05  LINE 9  COLUMN 1  VALUE "Description: ".
+           05  LINE 9  COLUMN 14 PIC X(50) USING ACCOUNT-DESCRIPTION.
 
        01  ADD-ACCOUNT-PROMPT.
-           05  LINE 7  COLUMN 1  VALUE "Add Account? (Y/N)".
-           05  LINE 7  COLUMN 20 PIC Z USING CONTINUE-KEY AUTO.
+           05  LINE 11  COLUMN 1  VALUE "Add Account? (Y/N)".
+           05  LINE 11  COLUMN 20 PIC Z USING CONTINUE-KEY AUTO.
            
        01  LIST-ACCOUNT-SCREEN.
            05  BLANK SCREEN.
            05  LINE 1  COLUMN 1  VALUE "ID".
-           05  LINE 1  COLUMN 10 VALUE "Comp".
-           05  LINE 1  COLUMN 16 VALUE "Number".
-           05  LINE 1  COLUMN 37 VALUE "Type".
-           05  LINE 1  COLUMN 48 VALUE "S".
-           05  LINE 1  COLUMN 50 VALUE "Value".
+           05  LINE 1  COLUMN 10 VALUE "Company".
+           05  LINE 1  COLUMN 19 VALUE "Number".
+           05  LINE 1  COLUMN 40 VALUE "Type".
+           05  LINE 1  COLUMN 51 VALUE "S".
+           05  LINE 1  COLUMN 53 VALUE "Value".
            05  LINE 2  COLUMN 1  VALUE "--------".
-           05  LINE 2  COLUMN 10 VALUE "-----".
-           05  LINE 2  COLUMN 16 VALUE "--------------------".
-           05  LINE 2  COLUMN 37 VALUE "----------".
-           05  LINE 2  COLUMN 48 VALUE "-".
-           05  LINE 2  COLUMN 50 VALUE "----------------".
+           05  LINE 2  COLUMN 10 VALUE "--------".
+           05  LINE 2  COLUMN 19 VALUE "--------------------".
+           05  LINE 2  COLUMN 40 VALUE "----------".
+           05  LINE 2  COLUMN 51 VALUE "-".
+           05  LINE 2  COLUMN 53 VALUE "----------------".
 
        01  ACCOUNT-LIST-ROW.
            05  LINE CURRENT-LINE COLUMN 1  PIC Z(7)9
                                         FROM ACCOUNT-ID.
-           05  LINE CURRENT-LINE COLUMN 10 PIC X(5)
+           05  LINE CURRENT-LINE COLUMN 10 PIC X(8)
                                         FROM ACCOUNT-COMPANY.
-           05  LINE CURRENT-LINE COLUMN 16 PIC X(20)
+           05  LINE CURRENT-LINE COLUMN 19 PIC X(20)
                                         FROM ACCOUNT-NUMBER.
-           05  LINE CURRENT-LINE COLUMN 37 PIC X(10)
+           05  LINE CURRENT-LINE COLUMN 40 PIC X(10)
                                         FROM ACCOUNT-TYPE.
-           05  LINE CURRENT-LINE COLUMN 48 PIC X(1)
+           05  LINE CURRENT-LINE COLUMN 51 PIC X(1)
                                         FROM ACCOUNT-STATUS.
-           05  LINE CURRENT-LINE COLUMN 50 PIC -$$$$,$$$,$$9.99
+           05  LINE CURRENT-LINE COLUMN 53 PIC -$$$$,$$$,$$9.99
                                         FROM ACCOUNT-VALUE.
 
        01  CONTINUE-PROMPT.
@@ -234,6 +234,21 @@
            05  LINE CURRENT-LINE COLUMN 41 PIC X(30)
                                         FROM LEDGER-DESCRIPTION.
 
+       01  ADD-LEDGER-SCREEN.
+           05  LINE 5  COLUMN 1  VALUE "       Date: ".
+           05  LINE 5  COLUMN 15 PIC X(20) FROM DISPLAY-DATE-TIME.
+           05  LINE 6  COLUMN 1  VALUE "     Amount: ".
+           05  LINE 6  COLUMN 15 PIC -$$$$,$$$,$$$.$$
+                                 USING LEDGER-AMOUNT.
+           05  LINE 7  COLUMN 1  VALUE "Description: ".
+           05  LINE 7  COLUMN 15 PIC X(30) USING LEDGER-DESCRIPTION.
+           05  LINE 8  COLUMN 1  VALUE "     Status: ".
+           05  LINE 8  COLUMN 15 PIC X(1) USING LEDGER-STATUS.
+
+       01  ADD-LEDGER-PROMPT.
+           05  LINE 10 COLUMN 1  VALUE "Add Ledger Entry? (Y/N)".
+           05  LINE 10 COLUMN 25 PIC Z USING CONTINUE-KEY AUTO.
+           
        01  DEBUG-SCREEN.
            05  LINE CURRENT-LINE COLUMN 1  VALUE "File Status: ".
            05  LINE CURRENT-LINE COLUMN 15 PIC 9(2) FROM FILE-STATUS.
@@ -402,10 +417,13 @@
        UPDATE-CURRENT-ACCOUNT-LOOP.
            PERFORM READ-NEXT-LEDGER-RECORD.
            IF END-OF-FILE IS NOT EQUAL TO "Y"
-               ADD LEDGER-AMOUNT TO ACCOUNT-VALUE
-               MOVE LEDGER-STATUS TO ACCOUNT-STATUS
-           END-IF.
-           
+               PERFORM UPDATE-ACCOUNT-FROM-LEDGER.
+
+       UPDATE-ACCOUNT-FROM-LEDGER.
+           ADD LEDGER-AMOUNT TO ACCOUNT-VALUE.
+           IF LEDGER-STATUS IS NOT EQUAL TO SPACE
+               MOVE LEDGER-STATUS TO ACCOUNT-STATUS.
+               
        LOAD-ACCOUNT.
            PERFORM INIT-ACCOUNT-RECORD.
            MOVE "N" TO ACCOUNT-LOADED.
@@ -435,9 +453,7 @@
 
        LEDGER-MENU-LOOP.
            MOVE ZERO TO MENU-OPTION.
-           DISPLAY LIST-ACCOUNT-SCREEN.
-           MOVE 3 TO CURRENT-LINE.
-           DISPLAY ACCOUNT-LIST-ROW.
+           PERFORM DISPLAY-LEDGER-ACCOUNT-HEADER.
            DISPLAY LEDGER-MENU-SCREEN.
            ACCEPT LEDGER-MENU-SCREEN.
            IF MENU-OPTION IS EQUAL TO 1
@@ -448,11 +464,15 @@
                PERFORM UPDATE-CURRENT-ACCOUNT
                PERFORM WRITE-ACCOUNT.
 
+       DISPLAY-LEDGER-ACCOUNT-HEADER.
+           DISPLAY LIST-ACCOUNT-SCREEN.
+           MOVE 3 TO CURRENT-LINE.
+           DISPLAY ACCOUNT-LIST-ROW.
+               
        CREATE-LEDGER-FILE.
            OPEN OUTPUT LEDGER-FILE.
            PERFORM INIT-LEDGER-RECORD.
-           PERFORM GET-CURRENT-TIME.
-           MOVE NOW-DATE-TIME TO LEDGER-DATE-TIME.
+           PERFORM CURRENT-TIME-TO-LEDGER-TIME.
            MOVE "Initial Balance" TO LEDGER-DESCRIPTION.
            MOVE ACCOUNT-VALUE TO LEDGER-AMOUNT.
            MOVE ACCOUNT-STATUS TO LEDGER-STATUS.
@@ -464,6 +484,10 @@
                AT END MOVE "Y" TO END-OF-FILE.
            PERFORM LEDGER-DATE-TO-DISPLAY-DATE.
 
+       CURRENT-TIME-TO-LEDGER-TIME.
+           PERFORM GET-CURRENT-TIME.
+           MOVE NOW-DATE-TIME TO LEDGER-DATE-TIME.
+           
        LEDGER-DATE-TO-DISPLAY-DATE.
            MOVE LEDGER-DATE-YEAR TO DISPLAY-YEAR.
            MOVE LEDGER-DATE-MONTH TO DISPLAY-MONTH.
@@ -484,9 +508,7 @@
            ACCEPT CONTINUE-PROMPT.
 
        DISPLAY-LEDGER-HEADER.
-           DISPLAY LIST-ACCOUNT-SCREEN.
-           MOVE 3 TO CURRENT-LINE.
-           DISPLAY ACCOUNT-LIST-ROW.
+           PERFORM DISPLAY-LEDGER-ACCOUNT-HEADER.
            DISPLAY LIST-LEDGER-SCREEN.
            MOVE 7 TO CURRENT-LINE.
 
@@ -504,6 +526,28 @@
            END-IF.
                
        ADD-LEDGER.
+           PERFORM DISPLAY-LEDGER-ACCOUNT-HEADER.
+           PERFORM INIT-LEDGER-RECORD.
+           DISPLAY ADD-LEDGER-SCREEN.
+           ACCEPT ADD-LEDGER-SCREEN.
+           PERFORM CURRENT-TIME-TO-LEDGER-TIME.
+           PERFORM LEDGER-DATE-TO-DISPLAY-DATE.
+           DISPLAY ADD-LEDGER-SCREEN.
+           MOVE SPACES TO CONTINUE-KEY.
+           PERFORM SHOW-ADD-LEDGER-PROMPT
+               UNTIL CONTINUE-KEY EQUALS "Y" OR "y"
+               OR "N" OR "n".
+           IF CONTINUE-KEY EQUALS "Y" OR "y"
+               OPEN EXTEND LEDGER-FILE
+               WRITE LEDGER-RECORD
+               CLOSE LEDGER-FILE
+               PERFORM UPDATE-ACCOUNT-FROM-LEDGER
+               PERFORM WRITE-ACCOUNT
+           END-IF.
+
+       SHOW-ADD-LEDGER-PROMPT.        
+           DISPLAY ADD-LEDGER-PROMPT.
+           ACCEPT ADD-LEDGER-PROMPT.        
                
        REPORT-MENU.
            MOVE ZERO TO MENU-OPTION.
