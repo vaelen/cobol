@@ -43,12 +43,12 @@
 
            SELECT OPTIONAL LEDGER-FILE
                ASSIGN TO LEDGER-FILE-NAME
-               ORGANIZATION IS SEQUENTIAL
+               ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS FILE-STATUS.
 
            SELECT OPTIONAL CONTROL-FILE
                ASSIGN TO "control.dat"
-               ORGANIZATION IS SEQUENTIAL
+               ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS FILE-STATUS.
            
        DATA DIVISION.
@@ -74,7 +74,7 @@
                    15  LEDGER-TIME-HOUR   PIC 9(2)       VALUE ZEROS.
                    15  LEDGER-TIME-MIN    PIC 9(2)       VALUE ZEROS.
                    15  LEDGER-TIME-SEC    PIC 9(2)       VALUE ZEROS.
-           05  LEDGER-DESCRIPTION         PIC X(50)      VALUE SPACES.
+           05  LEDGER-DESCRIPTION         PIC X(30)      VALUE SPACES.
            05  LEDGER-AMOUNT              PIC S9(9)V9(2) VALUE ZEROS.
            05  LEDGER-STATUS              PIC X(1)       VALUE SPACE.
 
@@ -105,7 +105,22 @@
                    15  NOW-MINUTE         PIC 9(2)       VALUE ZEROS.
                    15  NOW-SECOND         PIC 9(2)       VALUE ZEROS.
            05  NOW-MS                     PIC 9(2)       VALUE ZEROS.
+       01  DISPLAY-DATE-TIME.
+           05  DISPLAY-DATE.
+               10  DISPLAY-YEAR           PIC 9(4)       VALUE ZEROS.
+               10  FILLER                 PIC X(1)       VALUE "/".
+               10  DISPLAY-MONTH          PIC 9(2)       VALUE ZEROS.
+               10  FILLER                 PIC X(1)       VALUE "/".
+               10  DISPLAY-DAY            PIC 9(2)       VALUE ZEROS.
+           05  FILLER                     PIC X(1)       VALUE " ".
+           05  DISPLAY-TIME.
+               10  DISPLAY-HOUR           PIC 9(2)       VALUE ZEROS.
+               10  FILLER                 PIC X(1)       VALUE ":".
+               10  DISPLAY-MINUTE         PIC 9(2)       VALUE ZEROS.
+               10  FILLER                 PIC X(1)       VALUE ":".
+               10  DISPLAY-SECOND         PIC 9(2)       VALUE ZEROS.
 
+           
        SCREEN SECTION.
 
        01  MAIN-MENU-SCREEN.
@@ -160,23 +175,23 @@
            05  LINE 5  COLUMN 14 PIC X(50) USING ACCOUNT-DESCRIPTION.
 
        01  ADD-ACCOUNT-PROMPT.
-           05  LINE 7 COLUMN 1  VALUE "Add Account? (Y/N)".
-           05  LINE 7 COLUMN 20 PIC Z USING CONTINUE-KEY AUTO.
+           05  LINE 7  COLUMN 1  VALUE "Add Account? (Y/N)".
+           05  LINE 7  COLUMN 20 PIC Z USING CONTINUE-KEY AUTO.
            
        01  LIST-ACCOUNT-SCREEN.
            05  BLANK SCREEN.
-           05  LINE 1 COLUMN 1  VALUE "ID".
-           05  LINE 1 COLUMN 10 VALUE "Comp".
-           05  LINE 1 COLUMN 16 VALUE "Number".
-           05  LINE 1 COLUMN 37 VALUE "Type".
-           05  LINE 1 COLUMN 48 VALUE "S".
-           05  LINE 1 COLUMN 50 VALUE "Value".
-           05  LINE 2 COLUMN 1  VALUE "--------".
-           05  LINE 2 COLUMN 10 VALUE "-----".
-           05  LINE 2 COLUMN 16 VALUE "--------------------".
-           05  LINE 2 COLUMN 37 VALUE "----------".
-           05  LINE 2 COLUMN 48 VALUE "-".
-           05  LINE 2 COLUMN 50 VALUE "----------------".
+           05  LINE 1  COLUMN 1  VALUE "ID".
+           05  LINE 1  COLUMN 10 VALUE "Comp".
+           05  LINE 1  COLUMN 16 VALUE "Number".
+           05  LINE 1  COLUMN 37 VALUE "Type".
+           05  LINE 1  COLUMN 48 VALUE "S".
+           05  LINE 1  COLUMN 50 VALUE "Value".
+           05  LINE 2  COLUMN 1  VALUE "--------".
+           05  LINE 2  COLUMN 10 VALUE "-----".
+           05  LINE 2  COLUMN 16 VALUE "--------------------".
+           05  LINE 2  COLUMN 37 VALUE "----------".
+           05  LINE 2  COLUMN 48 VALUE "-".
+           05  LINE 2  COLUMN 50 VALUE "----------------".
 
        01  ACCOUNT-LIST-ROW.
            05  LINE CURRENT-LINE COLUMN 1  PIC Z(7)9
@@ -196,6 +211,33 @@
            05  LINE CURRENT-LINE COLUMN 1
                                  VALUE "PRESS ANY KEY TO CONTINUE.".
            05  LINE CURRENT-LINE COLUMN 28 PIC Z
+                                        USING CONTINUE-KEY AUTO.
+
+       01  LIST-LEDGER-SCREEN.
+           05  LINE 5  COLUMN 1  VALUE "Date".
+           05  LINE 5  COLUMN 21 VALUE "S".
+           05  LINE 5  COLUMN 23 VALUE "Amount".
+           05  LINE 5  COLUMN 41 VALUE "Description".
+           05  LINE 6  COLUMN 1  VALUE "-------------------".
+           05  LINE 6  COLUMN 21 VALUE "-".
+           05  LINE 6  COLUMN 23 VALUE "----------------".
+           05  LINE 6  COLUMN 41
+              VALUE "-----------------------------".
+
+       01  LEDGER-LIST-ROW.
+           05  LINE CURRENT-LINE COLUMN 1  PIC X(19)
+                                        FROM DISPLAY-DATE-TIME.
+           05  LINE CURRENT-LINE COLUMN 21 PIC X(1)
+                                        FROM LEDGER-STATUS.
+           05  LINE CURRENT-LINE COLUMN 23 PIC -$$$$,$$$,$$9.99
+                                        FROM LEDGER-AMOUNT.
+           05  LINE CURRENT-LINE COLUMN 41 PIC X(30)
+                                        FROM LEDGER-DESCRIPTION.
+
+       01  DEBUG-SCREEN.
+           05  LINE CURRENT-LINE COLUMN 1  VALUE "File Status: ".
+           05  LINE CURRENT-LINE COLUMN 15 PIC 9(2) FROM FILE-STATUS.
+           05  LINE CURRENT-LINE COLUMN 20 PIC Z
                                         USING CONTINUE-KEY AUTO.
            
        PROCEDURE DIVISION.
@@ -232,6 +274,7 @@
            
        LOAD-CONTROL-FILE.
            PERFORM INIT-CONTROL-RECORD.
+           MOVE "N" TO END-OF-FILE.
            OPEN INPUT CONTROL-FILE.
            READ CONTROL-FILE NEXT RECORD
                AT END MOVE "Y" TO END-OF-FILE.
@@ -262,10 +305,10 @@
                PERFORM REPORT-MENU.
 
        LIST-ACCOUNTS.
+           MOVE "N" TO END-OF-FILE.
            OPEN INPUT ACCOUNT-FILE.
            DISPLAY LIST-ACCOUNT-SCREEN.
            MOVE 3 TO CURRENT-LINE.
-           MOVE "N" TO END-OF-FILE.
            PERFORM RESET-ACCOUNT-FILE-POSITION.
            IF END-OF-FILE IS NOT EQUAL TO "Y"
                PERFORM DISPLAY-NEXT-ACCOUNT-LIST-ROW
@@ -293,17 +336,14 @@
                    DISPLAY LIST-ACCOUNT-SCREEN
                    MOVE 3 TO CURRENT-LINE
                END-IF
-               PERFORM DISPLAY-ACCOUNT-LIST-RECORD
+               DISPLAY ACCOUNT-LIST-ROW
+               ADD 1 TO CURRENT-LINE
            END-IF.
            
        READ-NEXT-ACCOUNT-RECORD.
            READ ACCOUNT-FILE NEXT RECORD
                AT END MOVE "Y" TO END-OF-FILE.
            
-       DISPLAY-ACCOUNT-LIST-RECORD.
-           DISPLAY ACCOUNT-LIST-ROW.
-           ADD 1 TO CURRENT-LINE.
-
        SHOW-ADD-ACCOUNT-PROMPT.        
            DISPLAY ADD-ACCOUNT-PROMPT.
            ACCEPT ADD-ACCOUNT-PROMPT.
@@ -336,6 +376,7 @@
            CLOSE ACCOUNT-FILE.
                
        UPDATE-ACCOUNTS.
+           MOVE "N" TO END-OF-FILE.
            OPEN I-O ACCOUNT-FILE.
            PERFORM RESET-ACCOUNT-FILE-POSITION.
            PERFORM UPDATE-NEXT-ACCOUNT
@@ -393,6 +434,7 @@
            MOVE ZERO TO MENU-OPTION.
 
        LEDGER-MENU-LOOP.
+           MOVE ZERO TO MENU-OPTION.
            DISPLAY LIST-ACCOUNT-SCREEN.
            MOVE 3 TO CURRENT-LINE.
            DISPLAY ACCOUNT-LIST-ROW.
@@ -420,9 +462,47 @@
        READ-NEXT-LEDGER-RECORD.
            READ LEDGER-FILE NEXT RECORD
                AT END MOVE "Y" TO END-OF-FILE.
-           
-       LIST-LEDGER.
+           PERFORM LEDGER-DATE-TO-DISPLAY-DATE.
 
+       LEDGER-DATE-TO-DISPLAY-DATE.
+           MOVE LEDGER-DATE-YEAR TO DISPLAY-YEAR.
+           MOVE LEDGER-DATE-MONTH TO DISPLAY-MONTH.
+           MOVE LEDGER-DATE-DAY TO DISPLAY-DAY.
+           MOVE LEDGER-TIME-HOUR TO DISPLAY-HOUR.
+           MOVE LEDGER-TIME-MIN TO DISPLAY-MINUTE.
+           MOVE LEDGER-TIME-SEC TO DISPLAY-SECOND.
+                                  
+       LIST-LEDGER.
+           OPEN INPUT LEDGER-FILE.
+           MOVE "N" TO END-OF-FILE.
+           PERFORM DISPLAY-LEDGER-HEADER.
+           PERFORM DISPLAY-NEXT-LEDGER-ROW
+               UNTIL END-OF-FILE EQUALS "Y".
+           CLOSE LEDGER-FILE.
+           ADD 1 TO CURRENT-LINE.
+           DISPLAY CONTINUE-PROMPT.
+           ACCEPT CONTINUE-PROMPT.
+
+       DISPLAY-LEDGER-HEADER.
+           DISPLAY LIST-ACCOUNT-SCREEN.
+           MOVE 3 TO CURRENT-LINE.
+           DISPLAY ACCOUNT-LIST-ROW.
+           DISPLAY LIST-LEDGER-SCREEN.
+           MOVE 7 TO CURRENT-LINE.
+
+       DISPLAY-NEXT-LEDGER-ROW.
+           PERFORM READ-NEXT-LEDGER-RECORD.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               IF CURRENT-LINE IS GREATER THAN 23
+                   ADD 1 TO CURRENT-LINE
+                   DISPLAY CONTINUE-PROMPT
+                   ACCEPT CONTINUE-PROMPT
+                   PERFORM DISPLAY-LEDGER-HEADER
+               END-IF
+               DISPLAY LEDGER-LIST-ROW
+               ADD 1 TO CURRENT-LINE
+           END-IF.
+               
        ADD-LEDGER.
                
        REPORT-MENU.
