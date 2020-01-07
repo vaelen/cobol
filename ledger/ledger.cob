@@ -65,8 +65,6 @@
 
        FD  LEDGER-FILE.
        01  LEDGER-RECORD.
-           05  LEDGER-ID                  PIC 9(10)      VALUE ZEROS.
-           05  LEDGER-ACCOUNT-ID          PIC 9(10)      VALUE ZEROS.
            05  LEDGER-DATE-TIME.
                10  LEDGER-DATE.
                    15  LEDGER-DATE-YEAR   PIC 9(4)       VALUE ZEROS.
@@ -77,8 +75,8 @@
                    15  LEDGER-TIME-MIN    PIC 9(2)       VALUE ZEROS.
                    15  LEDGER-TIME-SEC    PIC 9(2)       VALUE ZEROS.
            05  LEDGER-DESCRIPTION         PIC X(50)      VALUE SPACES.
-           05  LEDGER-AMOUNT              PIC S9(7)V9(2) VALUE ZEROS.
-           05  LEDGER-NEW-STATUS          PIC X(1)       VALUE SPACE.
+           05  LEDGER-AMOUNT              PIC S9(9)V9(2) VALUE ZEROS.
+           05  LEDGER-STATUS              PIC X(1)       VALUE SPACE.
 
        FD  CONTROL-FILE.
        01  CONTROL-RECORD.
@@ -96,6 +94,17 @@
        77  FILE-STATUS                    PIC 9(2)       VALUE ZEROS.
        77  FILE-NOT-FOUND                 PIC 9(2)       VALUE 05.
        77  ACCOUNT-LOADED                 PIC X(1)       VALUE "N".
+       01  NOW.
+           05  NOW-DATE-TIME.
+               10  NOW-DATE.
+                   15  NOW-YEAR           PIC 9(4)       VALUE ZEROS.
+                   15  NOW-MONTH          PIC 9(2)       VALUE ZEROS.
+                   15  NOW-DAY            PIC 9(2)       VALUE ZEROS.
+               10  NOW-TIME.
+                   15  NOW-HOUR           PIC 9(2)       VALUE ZEROS.
+                   15  NOW-MINUTE         PIC 9(2)       VALUE ZEROS.
+                   15  NOW-SECOND         PIC 9(2)       VALUE ZEROS.
+           05  NOW-MS                     PIC 9(2)       VALUE ZEROS.
 
        SCREEN SECTION.
 
@@ -208,15 +217,18 @@
        INIT-ACCOUNT-RECORD.
            MOVE SPACES TO ACCOUNT-RECORD.
            MOVE ZEROS TO ACCOUNT-ID.
-           MOVE ZEROS TO ACCOUNT-ID.
            MOVE ZEROS TO ACCOUNT-VALUE.
 
        INIT-LEDGER-RECORD.
            MOVE ZEROS TO LEDGER-RECORD.
            MOVE SPACES TO LEDGER-DESCRIPTION.
+           MOVE SPACE TO LEDGER-STATUS.
 
        INIT-CONTROL-RECORD.
            MOVE 1 TO NEXT-ACCOUNT-ID.
+
+       GET-CURRENT-TIME.
+           MOVE FUNCTION CURRENT-DATE TO NOW.
            
        LOAD-CONTROL-FILE.
            PERFORM INIT-CONTROL-RECORD.
@@ -301,12 +313,14 @@
            MOVE NEXT-ACCOUNT-ID TO ACCOUNT-ID.
            DISPLAY ADD-ACCOUNT-SCREEN.
            ACCEPT ADD-ACCOUNT-SCREEN.
+           DISPLAY ADD-ACCOUNT-SCREEN.
            MOVE SPACES TO CONTINUE-KEY.
            PERFORM SHOW-ADD-ACCOUNT-PROMPT
                UNTIL CONTINUE-KEY EQUALS "Y" OR "y"
                OR "N" OR "n".
            IF CONTINUE-KEY EQUALS "Y" OR "y"
                PERFORM WRITE-ACCOUNT
+               PERFORM CREATE-LEDGER-FILE
                ADD 1 TO NEXT-ACCOUNT-ID
                PERFORM WRITE-CONTROL-FILE
            END-IF.
@@ -317,7 +331,8 @@
                CLOSE ACCOUNT-FILE
                OPEN OUTPUT ACCOUNT-FILE
            END-IF.
-           WRITE ACCOUNT-RECORD.
+           WRITE ACCOUNT-RECORD
+               INVALID KEY REWRITE ACCOUNT-RECORD.
            CLOSE ACCOUNT-FILE.
                
        UPDATE-ACCOUNTS.
@@ -330,10 +345,26 @@
            PERFORM READ-NEXT-ACCOUNT-RECORD.
            IF END-OF-FILE IS NOT EQUAL TO "Y"
                PERFORM UPDATE-CURRENT-ACCOUNT
+               REWRITE ACCOUNT-RECORD
            END-IF.
 
        UPDATE-CURRENT-ACCOUNT.
+           MOVE ZEROS TO ACCOUNT-VALUE.
+           MOVE SPACE TO ACCOUNT-STATUS.
+           MOVE "N" TO END-OF-FILE.
+           OPEN INPUT LEDGER-FILE.
+           PERFORM UPDATE-CURRENT-ACCOUNT-LOOP
+               UNTIL END-OF-FILE IS EQUAL TO "Y".
+           CLOSE LEDGER-FILE.
+           MOVE "N" TO END-OF-FILE.
 
+       UPDATE-CURRENT-ACCOUNT-LOOP.
+           PERFORM READ-NEXT-LEDGER-RECORD.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               ADD LEDGER-AMOUNT TO ACCOUNT-VALUE
+               MOVE LEDGER-STATUS TO ACCOUNT-STATUS
+           END-IF.
+           
        LOAD-ACCOUNT.
            PERFORM INIT-ACCOUNT-RECORD.
            MOVE "N" TO ACCOUNT-LOADED.
@@ -372,8 +403,24 @@
            ELSE IF MENU-OPTION IS EQUAL TO 2
                PERFORM ADD-LEDGER
            ELSE IF MENU-OPTION IS EQUAL TO 3
-               PERFORM UPDATE-CURRENT-ACCOUNT.
+               PERFORM UPDATE-CURRENT-ACCOUNT
+               PERFORM WRITE-ACCOUNT.
 
+       CREATE-LEDGER-FILE.
+           OPEN OUTPUT LEDGER-FILE.
+           PERFORM INIT-LEDGER-RECORD.
+           PERFORM GET-CURRENT-TIME.
+           MOVE NOW-DATE-TIME TO LEDGER-DATE-TIME.
+           MOVE "Initial Balance" TO LEDGER-DESCRIPTION.
+           MOVE ACCOUNT-VALUE TO LEDGER-AMOUNT.
+           MOVE ACCOUNT-STATUS TO LEDGER-STATUS.
+           WRITE LEDGER-RECORD.
+           CLOSE LEDGER-FILE.
+
+       READ-NEXT-LEDGER-RECORD.
+           READ LEDGER-FILE NEXT RECORD
+               AT END MOVE "Y" TO END-OF-FILE.
+           
        LIST-LEDGER.
 
        ADD-LEDGER.
