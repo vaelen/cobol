@@ -50,6 +50,10 @@
                ASSIGN TO "control.dat"
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS FILE-STATUS.
+
+           SELECT REPORT-FILE
+               ASSIGN TO PRINTER PRINTER-NAME
+               ORGANIZATION IS LINE SEQUENTIAL.
            
        DATA DIVISION.
        FILE SECTION.
@@ -81,19 +85,69 @@
        FD  CONTROL-FILE.
        01  CONTROL-RECORD.
            05  NEXT-ACCOUNT-ID            PIC 9(10)      VALUE ZEROS.
+
+       FD  REPORT-FILE.
+       01  GENERIC-REPORT.
+           05  GENERIC-REPORT-LINE        PIC X(120)     VALUE SPACES.
+
+       01  ACCOUNT-REPORT-HEADER.
+           05  AH-COMPANY                 PIC X(8)       VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AH-NUMBER                  PIC X(20)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AH-TYPE                    PIC X(10)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AH-STATUS                  PIC X(1)       VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AH-VALUE                   PIC X(16)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AH-DESCRIPTION             PIC X(50)      VALUE SPACES.
+
+       01  ACCOUNT-REPORT-LINE.
+           05  AR-COMPANY                 PIC X(8)       VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AR-NUMBER                  PIC X(20)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AR-TYPE                    PIC X(10)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AR-STATUS                  PIC X(1)       VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AR-VALUE                   PIC -$$$$,$$$,$$0.00
+                                          VALUE ZEROS.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  AR-DESCRIPTION             PIC X(50)      VALUE SPACES.
+
+       01  LEDGER-REPORT-HEADER.
+           05  LH-DATE-TIME               PIC X(20)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  LH-DESCRIPTION             PIC X(30)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  LH-STATUS                  PIC X(1)       VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  LH-AMOUNT                  PIC X(16)      VALUE SPACES.
+
+       01  LEDGER-REPORT-LINE.
+           05  LR-DATE-TIME               PIC X(20)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  LR-DESCRIPTION             PIC X(30)      VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  LR-STATUS                  PIC X(1)       VALUE SPACES.
+           05  FILLER                     PIC X(1)       VALUE SPACES.
+           05  LR-AMOUNT                  PIC -$$$$,$$$,$$0.00
+                                          VALUE ZEROS.
            
        WORKING-STORAGE SECTION.
 
-       77  MENU-OPTION                    PIC 9(1)       VALUE ZERO.
-       77  END-OF-FILE                    PIC X(1)       VALUE SPACE.
-       77  CURRENT-LINE                   PIC 9(3)       VALUE ZEROS.
-       77  CONTINUE-KEY                   PIC X(1)       VALUE SPACE.
+       01  MENU-OPTION                    PIC 9(1)       VALUE ZERO.
+       01  END-OF-FILE                    PIC X(1)       VALUE SPACE.
+       01  CURRENT-LINE                   PIC 9(3)       VALUE ZEROS.
+       01  CONTINUE-KEY                   PIC X(1)       VALUE SPACE.
        01  LEDGER-FILE-NAME.
            05  ACCOUNT-ID                 PIC 9(8)       VALUE ZEROS.
            05  LEDGER-FN-EXT              PIC X(4)       VALUE ".dat".
-       77  FILE-STATUS                    PIC 9(2)       VALUE ZEROS.
-       77  FILE-NOT-FOUND                 PIC 9(2)       VALUE 05.
-       77  ACCOUNT-LOADED                 PIC X(1)       VALUE "N".
+       01  FILE-STATUS                    PIC 9(2)       VALUE ZEROS.
+       01  FILE-NOT-FOUND                 PIC 9(2)       VALUE 05.
+       01  ACCOUNT-LOADED                 PIC X(1)       VALUE "N".
        01  NOW.
            05  NOW-DATE-TIME.
                10  NOW-DATE.
@@ -119,7 +173,10 @@
                10  DISPLAY-MINUTE         PIC 9(2)       VALUE ZEROS.
                10  FILLER                 PIC X(1)       VALUE ":".
                10  DISPLAY-SECOND         PIC 9(2)       VALUE ZEROS.
-
+       01  PRINTER-NAME                   PIC X(60)
+                                        VALUE "report.txt".
+       01  PRINTER-ROWS                   PIC 9(3)       VALUE 55.
+       01  SCREEN-ROWS                    PIC 9(3)       VALUE 23.
            
        SCREEN SECTION.
 
@@ -130,7 +187,7 @@
            05  LINE 4  COLUMN 3  VALUE "2) Account Ledger".
            05  LINE 5  COLUMN 3  VALUE "3) Update Accounts".
            05  LINE 6  COLUMN 3  VALUE "4) Add Account".
-           05  LINE 7  COLUMN 3  VALUE "5) Reports".
+           05  LINE 7  COLUMN 3  VALUE "5) Account Report".
            05  LINE 8  COLUMN 3  VALUE "9) Exit".
            05  LINE 10 COLUMN 1  VALUE "Selecton => ".
            05  LINE 10 COLUMN 13 PIC Z USING MENU-OPTION AUTO.
@@ -145,16 +202,10 @@
            05  LINE 7  COLUMN 3  VALUE "1) Show Ledger".
            05  LINE 8  COLUMN 3  VALUE "2) Add Ledger Entry".
            05  LINE 9  COLUMN 3  VALUE "3) Update Account".
-           05  LINE 10 COLUMN 3  VALUE "9) Exit".
-           05  LINE 12 COLUMN 1  VALUE "Selecton => ".
-           05  LINE 12 COLUMN 13 PIC Z USING MENU-OPTION AUTO.
-
-       01  REPORT-MENU-SCREEN.
-           05  BLANK SCREEN.
-           05  LINE 1  COLUMN 1  VALUE "Report Menu:".
-           05  LINE 3  COLUMN 3  VALUE "9) Exit".
-           05  LINE 5  COLUMN 1  VALUE "Selecton => ".
-           05  LINE 5  COLUMN 13 PIC Z USING MENU-OPTION AUTO.
+           05  LINE 10 COLUMN 3  VALUE "4) Ledger Report".
+           05  LINE 11 COLUMN 3  VALUE "9) Exit".
+           05  LINE 13 COLUMN 1  VALUE "Selecton => ".
+           05  LINE 13 COLUMN 13 PIC Z USING MENU-OPTION AUTO.
 
        01  ADD-ACCOUNT-SCREEN.
            05  BLANK SCREEN.
@@ -248,6 +299,15 @@
        01  ADD-LEDGER-PROMPT.
            05  LINE 10 COLUMN 1  VALUE "Add Ledger Entry? (Y/N)".
            05  LINE 10 COLUMN 25 PIC Z USING CONTINUE-KEY AUTO.
+
+       01  REPORT-FILE-SCREEN.
+           05  BLANK SCREEN.
+           05  LINE 1  COLUMN 1  VALUE "Report Filename:".
+           05  LINE 1  COLUMN 19 PIC X(60) USING PRINTER-NAME.
+
+       01  REPORT-FILE-PROMPT.
+           05  LINE 3  COLUMN 1  VALUE "Print Report? (Y/N)".
+           05  LINE 3  COLUMN 21 PIC Z USING CONTINUE-KEY AUTO.
            
        01  DEBUG-SCREEN.
            05  LINE CURRENT-LINE COLUMN 1  VALUE "File Status: ".
@@ -286,7 +346,13 @@
 
        GET-CURRENT-TIME.
            MOVE FUNCTION CURRENT-DATE TO NOW.
-           
+           MOVE NOW-YEAR TO DISPLAY-YEAR.
+           MOVE NOW-MONTH TO DISPLAY-MONTH.
+           MOVE NOW-DAY TO DISPLAY-DAY.
+           MOVE NOW-HOUR TO DISPLAY-HOUR.
+           MOVE NOW-MINUTE TO DISPLAY-MINUTE.
+           MOVE NOW-SECOND TO DISPLAY-SECOND.
+
        LOAD-CONTROL-FILE.
            PERFORM INIT-CONTROL-RECORD.
            MOVE "N" TO END-OF-FILE.
@@ -317,8 +383,21 @@
            ELSE IF MENU-OPTION IS EQUAL TO 4
                PERFORM ADD-ACCOUNT
            ELSE IF MENU-OPTION IS EQUAL TO 5
-               PERFORM REPORT-MENU.
+               PERFORM ACCOUNT-REPORT.
 
+       DISPLAY-REPORT-PROMPT.
+           DISPLAY REPORT-FILE-SCREEN.
+           ACCEPT REPORT-FILE-SCREEN.
+           DISPLAY REPORT-FILE-SCREEN.
+           MOVE SPACES TO CONTINUE-KEY.
+           PERFORM SHOW-REPORT-FILE-PROMPT
+               UNTIL CONTINUE-KEY EQUALS "Y" OR "y"
+               OR "N" OR "n".
+
+       SHOW-REPORT-FILE-PROMPT.
+           DISPLAY REPORT-FILE-PROMPT.
+           ACCEPT REPORT-FILE-PROMPT.
+               
        LIST-ACCOUNTS.
            MOVE "N" TO END-OF-FILE.
            OPEN INPUT ACCOUNT-FILE.
@@ -334,6 +413,75 @@
            END-IF.
            CLOSE ACCOUNT-FILE.
 
+       ACCOUNT-REPORT.
+           PERFORM DISPLAY-REPORT-PROMPT.
+           IF CONTINUE-KEY EQUALS "Y" OR "y"
+               PERFORM PRINT-ACCOUNT-REPORT.
+
+       PRINT-ACCOUNT-REPORT.
+           MOVE "N" TO END-OF-FILE.
+           OPEN INPUT ACCOUNT-FILE.
+           PERFORM RESET-ACCOUNT-FILE-POSITION.
+           OPEN OUTPUT REPORT-FILE.
+           PERFORM WRITE-ACCOUNT-REPORT-HEADER.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               PERFORM WRITE-NEXT-ACCOUNT-REPORT-LINE
+                   UNTIL END-OF-FILE IS EQUAL TO "Y".
+           CLOSE REPORT-FILE.
+           CLOSE ACCOUNT-FILE.
+
+       WRITE-ACCOUNT-REPORT-HEADER.
+           MOVE SPACES TO GENERIC-REPORT-LINE.
+           PERFORM GET-CURRENT-TIME.
+           MOVE FUNCTION CONCATENATE("Account Report - ",
+               DISPLAY-DATE-TIME) TO GENERIC-REPORT-LINE.
+           WRITE GENERIC-REPORT BEFORE ADVANCING 2.
+           PERFORM WRITE-ACCOUNT-REPORT-SUB-HEADER.
+           MOVE 5 TO CURRENT-LINE.
+
+       WRITE-ACCOUNT-REPORT-SUB-HEADER.
+           MOVE SPACES TO ACCOUNT-REPORT-HEADER.
+           MOVE "Company" TO AH-COMPANY.
+           MOVE "Number"  TO AH-NUMBER.
+           MOVE "Type" TO AH-TYPE.
+           MOVE "S" TO AH-STATUS.
+           MOVE "Value" TO AH-VALUE.
+           MOVE "Description" TO AH-DESCRIPTION.
+           WRITE ACCOUNT-REPORT-HEADER BEFORE ADVANCING 1.
+           MOVE ALL '-' TO AH-COMPANY.
+           MOVE ALL "-" TO AH-NUMBER.
+           MOVE ALL "-" TO AH-TYPE.
+           MOVE ALL "-" TO AH-STATUS.
+           MOVE ALL "-" TO AH-VALUE.
+           MOVE ALL "-" TO AH-DESCRIPTION.
+           WRITE ACCOUNT-REPORT-HEADER BEFORE ADVANCING 1.
+
+       WRITE-ACCOUNT-REPORT-FOOTER.
+           MOVE SPACES TO GENERIC-REPORT-LINE.
+           WRITE GENERIC-REPORT BEFORE ADVANCING PAGE.
+           
+       WRITE-NEXT-ACCOUNT-REPORT-LINE.
+           PERFORM READ-NEXT-ACCOUNT-RECORD.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               IF CURRENT-LINE IS GREATER THAN PRINTER-ROWS
+                   PERFORM WRITE-ACCOUNT-REPORT-FOOTER
+                   PERFORM WRITE-ACCOUNT-REPORT-HEADER
+               END-IF
+               PERFORM WRITE-ACCOUNT-REPORT-LINE
+           END-IF.           
+           
+       WRITE-ACCOUNT-REPORT-LINE.
+           MOVE SPACES TO ACCOUNT-REPORT-LINE.
+           MOVE ZEROS TO AR-VALUE.
+           MOVE ACCOUNT-COMPANY TO AR-COMPANY.
+           MOVE ACCOUNT-NUMBER TO AR-NUMBER.
+           MOVE ACCOUNT-TYPE TO AR-TYPE.
+           MOVE ACCOUNT-DESCRIPTION TO AR-DESCRIPTION.
+           MOVE ACCOUNT-STATUS TO AR-STATUS.
+           MOVE ACCOUNT-VALUE TO AR-VALUE.
+           WRITE ACCOUNT-REPORT-LINE BEFORE ADVANCING 1.
+           ADD 1 TO CURRENT-LINE.
+           
        RESET-ACCOUNT-FILE-POSITION.
            MOVE 1 TO ACCOUNT-ID.
            MOVE "N" TO END-OF-FILE.
@@ -344,7 +492,7 @@
        DISPLAY-NEXT-ACCOUNT-LIST-ROW.
            PERFORM READ-NEXT-ACCOUNT-RECORD.
            IF END-OF-FILE IS NOT EQUAL TO "Y"
-               IF CURRENT-LINE IS GREATER THAN 23
+               IF CURRENT-LINE IS GREATER THAN SCREEN-ROWS
                    ADD 1 TO CURRENT-LINE
                    DISPLAY CONTINUE-PROMPT
                    ACCEPT CONTINUE-PROMPT
@@ -462,7 +610,9 @@
                PERFORM ADD-LEDGER
            ELSE IF MENU-OPTION IS EQUAL TO 3
                PERFORM UPDATE-CURRENT-ACCOUNT
-               PERFORM WRITE-ACCOUNT.
+               PERFORM WRITE-ACCOUNT
+           ELSE IF MENU-OPTION IS EQUAL TO 4
+               PERFORM LEDGER-REPORT.    
 
        DISPLAY-LEDGER-ACCOUNT-HEADER.
            DISPLAY LIST-ACCOUNT-SCREEN.
@@ -515,7 +665,7 @@
        DISPLAY-NEXT-LEDGER-ROW.
            PERFORM READ-NEXT-LEDGER-RECORD.
            IF END-OF-FILE IS NOT EQUAL TO "Y"
-               IF CURRENT-LINE IS GREATER THAN 23
+               IF CURRENT-LINE IS GREATER THAN SCREEN-ROWS
                    ADD 1 TO CURRENT-LINE
                    DISPLAY CONTINUE-PROMPT
                    ACCEPT CONTINUE-PROMPT
@@ -524,7 +674,71 @@
                DISPLAY LEDGER-LIST-ROW
                ADD 1 TO CURRENT-LINE
            END-IF.
-               
+
+       LEDGER-REPORT.
+           PERFORM DISPLAY-REPORT-PROMPT.
+           IF CONTINUE-KEY EQUALS "Y" OR "y"
+               PERFORM PRINT-LEDGER-REPORT.
+
+       PRINT-LEDGER-REPORT.
+           MOVE "N" TO END-OF-FILE.
+           OPEN INPUT LEDGER-FILE.
+           OPEN OUTPUT REPORT-FILE.
+           PERFORM WRITE-LEDGER-REPORT-HEADER.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               PERFORM WRITE-NEXT-LEDGER-REPORT-LINE
+                   UNTIL END-OF-FILE IS EQUAL TO "Y".
+           CLOSE REPORT-FILE.
+           CLOSE LEDGER-FILE.
+
+       WRITE-LEDGER-REPORT-HEADER.
+           MOVE SPACES TO GENERIC-REPORT-LINE.
+           PERFORM GET-CURRENT-TIME.
+           MOVE FUNCTION CONCATENATE("Ledger Report - ",
+               DISPLAY-DATE-TIME) TO GENERIC-REPORT-LINE.
+           WRITE GENERIC-REPORT BEFORE ADVANCING 2.
+           PERFORM WRITE-ACCOUNT-REPORT-SUB-HEADER.
+           MOVE 5 TO CURRENT-LINE.
+           PERFORM WRITE-ACCOUNT-REPORT-LINE.
+           MOVE SPACES TO LEDGER-REPORT-HEADER.
+           WRITE LEDGER-REPORT-HEADER BEFORE ADVANCING 1.
+           MOVE "Date" TO LH-DATE-TIME.
+           MOVE "Description" TO LH-DESCRIPTION.
+           MOVE "S" TO LH-STATUS.
+           MOVE "Value" TO LH-AMOUNT.
+           WRITE LEDGER-REPORT-HEADER BEFORE ADVANCING 1.
+           MOVE ALL '-' TO LH-DATE-TIME.
+           MOVE ALL "-" TO LH-DESCRIPTION.
+           MOVE ALL "-" TO LH-STATUS.
+           MOVE ALL "-" TO LH-AMOUNT.
+           WRITE LEDGER-REPORT-HEADER BEFORE ADVANCING 1.
+           MOVE 8 TO CURRENT-LINE.
+
+       WRITE-LEDGER-REPORT-FOOTER.
+           MOVE SPACES TO GENERIC-REPORT-LINE.
+           WRITE GENERIC-REPORT BEFORE ADVANCING PAGE.
+           
+       WRITE-NEXT-LEDGER-REPORT-LINE.
+           PERFORM READ-NEXT-LEDGER-RECORD.
+           IF END-OF-FILE IS NOT EQUAL TO "Y"
+               IF CURRENT-LINE IS GREATER THAN PRINTER-ROWS
+                   PERFORM WRITE-LEDGER-REPORT-FOOTER
+                   PERFORM WRITE-LEDGER-REPORT-HEADER
+               END-IF
+               PERFORM WRITE-LEDGER-REPORT-LINE
+           END-IF.           
+           
+       WRITE-LEDGER-REPORT-LINE.
+           MOVE SPACES TO LEDGER-REPORT-LINE.
+           MOVE ZEROS TO LR-AMOUNT.
+           PERFORM LEDGER-DATE-TO-DISPLAY-DATE.
+           MOVE DISPLAY-DATE-TIME TO LR-DATE-TIME.
+           MOVE LEDGER-DESCRIPTION TO LR-DESCRIPTION.
+           MOVE LEDGER-STATUS TO LR-STATUS.
+           MOVE LEDGER-AMOUNT TO LR-AMOUNT.
+           WRITE LEDGER-REPORT-LINE BEFORE ADVANCING 1.
+           ADD 1 TO CURRENT-LINE.
+           
        ADD-LEDGER.
            PERFORM DISPLAY-LEDGER-ACCOUNT-HEADER.
            PERFORM INIT-LEDGER-RECORD.
@@ -548,14 +762,3 @@
        SHOW-ADD-LEDGER-PROMPT.        
            DISPLAY ADD-LEDGER-PROMPT.
            ACCEPT ADD-LEDGER-PROMPT.        
-               
-       REPORT-MENU.
-           MOVE ZERO TO MENU-OPTION.
-           PERFORM REPORT-MENU-LOOP
-               UNTIL MENU-OPTION IS EQUAL TO 9.
-           MOVE ZERO TO MENU-OPTION.
-
-       REPORT-MENU-LOOP.
-           MOVE ZERO TO MENU-OPTION.
-           DISPLAY REPORT-MENU-SCREEN.
-           ACCEPT REPORT-MENU-SCREEN.
