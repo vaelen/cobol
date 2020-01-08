@@ -23,9 +23,15 @@
       * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
       * OTHER DEALINGS IN THE SOFTWARE.
 
-      ***************************************
-      * This is a simple accounting ledger. *
-      ***************************************
+      ****************************************
+      * This is a simple accounting ledger.  *
+      *                                      *
+      * I wrote this in memory of my mother, *
+      * Roberta Young, and the many hours    *
+      * she spent sitting in front of a      *
+      * green screen terminal entering COBOL *
+      * programs when I was a kid.           *
+      ****************************************
        
        IDENTIFICATION DIVISION.
        PROGRAM-ID. LEDGER.
